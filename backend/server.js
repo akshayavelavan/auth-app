@@ -11,12 +11,18 @@ const User = require("./models/User");
 const app = express();
 
 // 🌍 CORS
-app.use(cors());
+app.use(cors({
+  origin: "*", // Replace with frontend URL in production
+  methods: ["GET","POST","PUT","DELETE"],
+  allowedHeaders: ["Content-Type","Authorization"]
+}));
+
+// Parse JSON
 app.use(express.json());
 
 // 🚦 RATE LIMITING FOR AUTH
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 15 * 60 * 1000, // 15 min
   max: 10,
   message: { message: "Too many requests, try again later ❌" }
 });
@@ -50,10 +56,11 @@ app.get("/api/dashboard", authMiddleware, async (req, res) => {
         { action: "Password hashed with bcrypt", time: new Date() },
         { action: "Rate limiting enabled", time: new Date() },
         { action: "Secure API route accessed", time: new Date() }
-      ]
+      ],
+      message: `Welcome, ${user.email}! You are now on the dashboard.`
     });
   } catch (err) {
-    console.error(err);
+    console.error("Dashboard error ❌:", err);
     res.status(500).json({ message: "Server error ❌" });
   }
 });

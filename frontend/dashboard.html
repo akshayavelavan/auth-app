@@ -75,7 +75,7 @@ body{
 /* Cards Grid */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); /* FIXED */
   gap:25px;
 }
 
@@ -161,9 +161,7 @@ body{
 
 <script>
 const token = localStorage.getItem("token");
-
-// ✅ IMPORTANT FIX: remove /api/auth
-const API_URL = "https://auth-app-1-cq6l.onrender.com";
+const API_URL = "https://auth-app-1-cq6l.onrender.com/api/dashboard"; // ✅ only /api/dashboard
 
 if(!token){
   window.location.href="index.html";
@@ -171,7 +169,7 @@ if(!token){
 
 async function loadDashboard(){
   try{
-    const res = await fetch(`${API_URL}/dashboard`,{
+    const res = await fetch("https://auth-app-1-cq6l.onrender.com/api/dashboard",{
       headers:{
         "Authorization":"Bearer "+token
       }
@@ -183,22 +181,15 @@ async function loadDashboard(){
 
     const data = await res.json();
 
-    // Your backend sends:
-    // { message: "Welcome email! You are now on the dashboard." }
+    // Use data.user directly from backend
+    const email = data.user?.email || "User";
 
-    document.getElementById("welcome-text").innerText =
-      data.message;
-
-    // Extract email from message (simple split)
-    const emailMatch = data.message.match(/Welcome (.*)!/);
-    const email = emailMatch ? emailMatch[1] : "User";
-
+    document.getElementById("welcome-text").innerText = `Welcome, ${email}!`;
     document.getElementById("user-email").innerText = email;
-
-    document.getElementById("login-time").innerText =
-      new Date().toLocaleString();
+    document.getElementById("login-time").innerText = new Date().toLocaleString();
 
   }catch(err){
+    console.error(err);
     localStorage.removeItem("token");
     window.location.href="index.html";
   }
