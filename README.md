@@ -1,24 +1,35 @@
-# Auth App 🔐
+# Secure Auth Dashboard
 
-A simple full-stack authentication system built using:
+A secure authentication system with JWT, bcrypt, rate limiting, and a responsive dashboard.
 
-- Node.js
-- Express
-- MongoDB
-- JWT Authentication
-- HTML, CSS, JavaScript
+**Live Demo:**  
+- Frontend: [https://securenotes111.netlify.app/](https://securenotes111.netlify.app/)  
+- Backend: [https://auth-app-1-cq6l.onrender.com/](https://auth-app-1-cq6l.onrender.com/)
+
+---
 
 ## Features
-- User Registration
-- User Login
-- Password Hashing
-- JWT-based Authentication
-- Protected Dashboard
 
-## How to Run Locally
+- User Registration & Login with strong passwords
+- JWT Authentication & Protected Dashboard
+- Password Hashing (bcrypt)
+- Rate Limiting on auth routes
 
-### Backend
+---
+
+## Tech Stack
+
+- Frontend: HTML, CSS, JS  
+- Backend: Node.js, Express  
+- Database: MongoDB  
+
+---
+
+## Setup
+
+**Backend:**
 ```bash
 cd backend
 npm install
-node server.js
+# add .env with MONGO_URI, JWT_SECRET, PORT
+npm start
