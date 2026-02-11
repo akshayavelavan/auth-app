@@ -1,216 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Dashboard | Secure Auth</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Inter',sans-serif;
-}
-
-body{
-  background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-  color:white;
-  min-height:100vh;
-}
-
-/* Navbar */
-.navbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:20px 40px;
-  background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid rgba(255,255,255,0.1);
-}
-
-.logo{
-  font-weight:600;
-  font-size:18px;
-  letter-spacing:1px;
-}
-
-.logout-btn{
-  padding:8px 16px;
-  border:none;
-  border-radius:8px;
-  background:linear-gradient(135deg,#3a7bd5,#3a6073);
-  color:white;
-  cursor:pointer;
-  font-size:14px;
-  transition:0.3s;
-}
-
-.logout-btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 8px 18px rgba(58,123,213,0.4);
-}
-
-/* Main Container */
-.container{
-  padding:40px;
-  max-width:1100px;
-  margin:auto;
-}
-
-.welcome{
-  font-size:28px;
-  font-weight:600;
-  margin-bottom:10px;
-}
-
-.subtitle{
-  color:#bbb;
-  margin-bottom:40px;
-}
-
-/* Cards Grid */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:25px;
-}
-
-.card{
-  background:rgba(255,255,255,0.05);
-  padding:25px;
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,0.1);
-  backdrop-filter:blur(12px);
-  transition:0.3s;
-}
-
-.card:hover{
-  transform:translateY(-5px);
-  box-shadow:0 15px 35px rgba(0,0,0,0.5);
-}
-
-.card h3{
-  font-size:16px;
-  margin-bottom:10px;
-  color:#4da3ff;
-}
-
-.card p{
-  font-size:14px;
-  color:#ccc;
-  line-height:1.5;
-}
-
-.footer{
-  text-align:center;
-  margin-top:60px;
-  color:#888;
-  font-size:13px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="navbar">
-  <div class="logo">Secure Auth Dashboard</div>
-  <button class="logout-btn" id="logout-btn">Logout</button>
-</div>
-
-<div class="container">
-  <div class="welcome" id="welcome-text">Loading...</div>
-  <div class="subtitle">Security Overview & Account Insights</div>
-
-  <div class="grid">
-
-    <div class="card">
-      <h3>Account Email</h3>
-      <p id="user-email">Loading...</p>
-    </div>
-
-    <div class="card">
-      <h3>Login Time</h3>
-      <p id="login-time">Loading...</p>
-    </div>
-
-    <div class="card">
-      <h3>Authentication Status</h3>
-      <p>JWT Token verified successfully. Session active and secure.</p>
-    </div>
-
-    <div class="card">
-      <h3>Security Features Enabled</h3>
-      <p>
-        • Password Hashing (bcrypt)<br>
-        • JWT Authentication<br>
-        • Rate Limiting Protection<br>
-        • Secure API Routes
-      </p>
-    </div>
-
-  </div>
-
-  <div class="footer">
-    Secure Auth System © 2026
-  </div>
-</div>
-
 <script>
+const API_URL = "https://auth-app-1-cq6l.onrender.com/api/dashboard"; // your Render backend
 const token = localStorage.getItem("token");
 
-// ✅ IMPORTANT FIX: remove /api/auth
-const API_URL = "https://auth-app-1-cq6l.onrender.com";
-
-if(!token){
-  window.location.href="index.html";
+if (!token) {
+  window.location.href = "index.html"; // redirect if no token
 }
 
-async function loadDashboard(){
-  try{
-    const res = await fetch(`${API_URL}/dashboard`,{
-      headers:{
-        "Authorization":"Bearer "+token
+async function loadDashboard() {
+  try {
+    const res = await fetch(API_URL, {
+      headers: {
+        "Authorization": "Bearer " + token
       }
     });
 
-    if(!res.ok){
-      throw new Error("Unauthorized");
+    console.log("Dashboard response status:", res.status); // debug
+    const data = await res.json();
+    console.log("Dashboard data:", data); // debug
+
+    if (!res.ok) {
+      // If token invalid, clear it and redirect
+      localStorage.removeItem("token");
+      window.location.href = "index.html";
+      return;
     }
 
-    const data = await res.json();
-
-    // Your backend sends:
-    // { message: "Welcome email! You are now on the dashboard." }
-
-    document.getElementById("welcome-text").innerText =
-      data.message;
-
-    // Extract email from message (simple split)
-    const emailMatch = data.message.match(/Welcome (.*)!/);
-    const email = emailMatch ? emailMatch[1] : "User";
-
+    // Populate dashboard fields safely
+    const email = data.user?.email || "User";
+    document.getElementById("welcome-text").innerText = `Welcome, ${email}!`;
     document.getElementById("user-email").innerText = email;
+    document.getElementById("login-time").innerText = new Date(data.serverTime).toLocaleString();
+    document.getElementById("session-status").innerText = "Active";
 
-    document.getElementById("login-time").innerText =
-      new Date().toLocaleString();
+    // Activity list
+    const activityList = data.activity?.map(a => `${a.action} - ${new Date(a.time).toLocaleString()}`) || [
+      "JWT Token verified",
+      "Password hashed with bcrypt",
+      "Rate limiting enabled",
+      "Secure API route accessed"
+    ];
 
-  }catch(err){
+    const ul = document.getElementById("activity-list");
+    ul.innerHTML = "";
+    activityList.forEach(act => {
+      const li = document.createElement("li");
+      li.textContent = act;
+      ul.appendChild(li);
+    });
+
+  } catch (err) {
+    console.error("Dashboard fetch error:", err);
     localStorage.removeItem("token");
-    window.location.href="index.html";
+    window.location.href = "index.html";
   }
 }
 
+// Load dashboard on page load
 loadDashboard();
 
-document.getElementById("logout-btn").addEventListener("click",()=>{
+// Logout button
+document.getElementById("logout-btn").addEventListener("click", () => {
   localStorage.removeItem("token");
-  window.location.href="index.html";
+  window.location.href = "index.html";
 });
 </script>
-
-</body>
-</html>
