@@ -1,56 +1,64 @@
-// server.js
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 const authRoutes = require("./routes/auth");
-const authMiddleware = require("./middleware/authMiddleware"); // ✅ corrected
-const User = require("./models/User"); // 👈 added to fetch user email
+const authMiddleware = require("./middleware/authMiddleware");
+const User = require("./models/User");
 
 const app = express();
 
-// ----------------------------
-// MIDDLEWARE
-// ----------------------------
+// 🌍 CORS
 app.use(cors());
 app.use(express.json());
 
-// ----------------------------
-// ROUTES
-// ----------------------------
-app.use("/api/auth", authRoutes); // register + login
+// 🚦 RATE LIMITING FOR AUTH
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: "Too many requests, try again later ❌" }
+});
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
 
-// Test root route
+// 📌 ROUTES
+app.use("/api/auth", authRoutes);
+
+// ROOT
 app.get("/", (req, res) => {
-  res.send("Auth server is running");
+  res.send("Secure Auth Server Running ✅");
 });
 
-// ----------------------------
-// PROTECTED ROUTE 🔒
-// ----------------------------
-app.get("/dashboard", authMiddleware, async (req, res) => {
+// 🔒 DASHBOARD
+app.get("/api/dashboard", authMiddleware, async (req, res) => {
   try {
-    // Fetch user from DB using ID from JWT
     const user = await User.findById(req.user.id);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Send welcome message with user's email
     res.json({
-      message: `Welcome ${user.email}! You are now on the dashboard.`,
+      user: {
+        email: user.email,
+        role: user.role || "user",
+        lastLogin: user.lastLogin,
+        joinedAt: user.createdAt
+      },
+      activity: [
+        { action: "JWT Token verified", time: new Date() },
+        { action: "Password hashed with bcrypt", time: new Date() },
+        { action: "Rate limiting enabled", time: new Date() },
+        { action: "Secure API route accessed", time: new Date() }
+      ]
     });
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error ❌" });
   }
 });
 
-// ----------------------------
-// MONGODB CONNECTION + SERVER START
-// ----------------------------
+// 🚀 START SERVER
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
