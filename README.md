@@ -3,8 +3,11 @@
 A secure authentication system with JWT, bcrypt, rate limiting, and a responsive dashboard.
 
 **Live Demo:**  
-- Frontend: [https://securenotes111.netlify.app/](https://securenotes111.netlify.app/)  
+**Live Demo:**  
+- Frontend: [https://auth-app-lyart-five.vercel.app/](https://auth-app-lyart-five.vercel.app/)  
 - Backend: [https://auth-app-1-cq6l.onrender.com/](https://auth-app-1-cq6l.onrender.com/)
+
+
 
 ---
 
